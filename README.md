@@ -53,7 +53,7 @@ Passwords:
 Databases:
 * hackedDatabase1Kx100x1900.csv
 * hackedDatabase100x10x190.csv
-* hackedDatabases10Kx1Kx19K.csv
+* hackedDatabase10Kx1Kx19K.csv
 
 Here's what needs to be done:
 
