@@ -1,5 +1,6 @@
 package com.amazon.ata.introthreads.classroom;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
@@ -8,6 +9,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -19,6 +21,8 @@ import java.util.Map;
 public class PasswordHasher {
     // should create the file in your workspace directory
     private static final String PASSWORDS_AND_HASHES_FILE = "./passwordsAndHashesOutput.csv";
+
+
     private static final String DISCOVERED_SALT = "salt";
 
     /**
@@ -29,11 +33,38 @@ public class PasswordHasher {
      * @throws InterruptedException
      */
     public static Map<String, String> generateAllHashes(List<String> passwords) throws InterruptedException {
-        Map<String, String> passwordToHashes = Maps.newConcurrentMap();
-        BatchPasswordHasher batchHasher = new BatchPasswordHasher(passwords, DISCOVERED_SALT);
-        batchHasher.hashPasswords();
-        passwordToHashes.putAll(batchHasher.getPasswordToHashes());
 
+
+        Map<String, String> passwordToHashes = Maps.newConcurrentMap();
+
+     /*   BatchPasswordHasher batchHasher = new BatchPasswordHasher(passwords, DISCOVERED_SALT);*/
+    /*    batchHasher.hashPasswords();
+        passwordToHashes.putAll(batchHasher.getPasswordToHashes());
+*/
+        List<List<String>> passwordSublists = Lists.partition(passwords,passwords.size()/4);
+
+
+        List<BatchPasswordHasher> savedHasher = new ArrayList<>();
+
+        List<Thread> theThreads = new ArrayList<>();
+
+
+        for(int i = 0; i <passwordSublists.size(); i++){
+            BatchPasswordHasher aHasher = new BatchPasswordHasher(passwordSublists.get(i), DISCOVERED_SALT);
+            savedHasher.add(aHasher);
+
+            Thread aThread = new Thread(aHasher);
+
+            theThreads.add(aThread);
+
+            aThread.start();
+        }
+
+        waitForThreadsToComplete(theThreads);
+
+        for(BatchPasswordHasher aHasher : savedHasher){
+            passwordToHashes.putAll(aHasher.getPasswordToHashes());
+        }
         return passwordToHashes;
     }
 
